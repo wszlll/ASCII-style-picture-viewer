@@ -8,14 +8,89 @@
 #include <algorithm>
 #include "stb_image.h"
 
-char asacii(float brightness)
+const char *shades = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\\|()1{}[]?-_+~<>i!lI;:,\"^`'. ";
+
+float cal_brirghtness(float R, float G, float B)
+{
+
+    float brightness = 0.299 * R + 0.587 * G + 0.114 * B;
+    return brightness;
+}
+
+char asacii(float brightness, bool inverse_flag)
 {
     int n = brightness / 3.65;
-    if (n > 65)
-        n = 69;
+    const char *seventy = shades;
+    if (inverse_flag)
+    {
+        return seventy[69 - n];
+    }
+    else
+    {
+        return seventy[n];
+    }
+}
 
-    const char *seventy = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\\|()1{}[]?-_+~<>i!lI;:,\"^`'. ";
-    return seventy[n];
+void display(int x, int y, unsigned char *data)
+{
+    int bod;
+    std::cout << "how many the boarder is :";
+    std::cin >> bod;
+    bool inverse_flag = true;
+    std::cout << "Inversed?[Y/N]";
+    std::string ans;
+    std::cin >> ans;
+    if (ans == "Y")
+    {
+        inverse_flag = true;
+    }
+    else
+    {
+        inverse_flag = false;
+    }
+    int com = std::max(x, y) / bod;
+    if (com * bod < std::max(x, y))
+        com++;
+
+    // std::cin >> com;
+    if (com < 1)
+        com = 1;
+
+    // int k = 1;
+    std::cout << "# ";
+    for (int j = 0; j < x; j += com)
+    {
+        std::cout << "# ";
+    }
+    std::cout << "#";
+    std::cout << std::endl;
+
+    for (int i = 0; i < y; i += com)
+    {
+
+        // std::cout << "    ";
+        std::cout << "# ";
+
+        for (int j = 0; j < x; j += com)
+        {
+            /*R = data[i * x * 3 + j * 3 + 0];
+                G = data[i * x * 3 + j * 3 + 1];
+                B = data[i * x * 3 + j * 3 + 2];*/
+            int pos = i * x * 3 + j * 3;
+            float brightness = cal_brirghtness(data[pos], data[pos + 1], data[pos + 2]);
+            char X = asacii(brightness, inverse_flag);
+            std::cout << X << " ";
+        }
+        std::cout << "#" << "\n";
+    }
+    std::cout << "# ";
+    for (int j = 0; j < x; j += com)
+    {
+        std::cout << "# ";
+    }
+    std::cout << "#";
+    std::cout << std::endl;
+    stbi_image_free(data);
 }
 
 int main()
@@ -40,27 +115,5 @@ int main()
         std::cout << "load failed\n";
         return -1;
     }
-    int bod;
-    std::cin >> bod;
-    int com = std::max(x, y) / bod;
-
-    // std::cin >> com;
-    if (com < 1)
-        com = 1;
-    for (int i = 0; i < y; i += com)
-    {
-        std::cout << "    ";
-        for (int j = 0; j < x; j += com)
-        {
-            float R, G, B;
-            R = data[i * x * 3 + j * 3 + 0];
-            G = data[i * x * 3 + j * 3 + 1];
-            B = data[i * x * 3 + j * 3 + 2];
-            float brightness = 0.299 * R + 0.587 * G + 0.114 * B;
-            char X = asacii(brightness);
-            std::cout << X << " ";
-        }
-        std::cout << "   " << "\n";
-    }
-    stbi_image_free(data);
+    display(x, y, data);
 }
